@@ -486,12 +486,14 @@ def max_chsh_quantum_for_werner(V):
 def set_default(name, value):
     st.session_state.setdefault(name, value)
 
-def reset_keys(mapping):
-    current_lang = st.session_state.get("app_lang", "English")
-    for k, v in mapping.items():
-        st.session_state[k] = v
-    st.session_state["app_lang"] = current_lang
+def queue_state_update(mapping):
+    current = dict(st.session_state.get("_pending_state_update", {}))
+    current.update(mapping)
+    st.session_state["_pending_state_update"] = current
     st.rerun()
+
+def reset_keys(mapping):
+    queue_state_update(mapping)
 
 @st.cache_data(show_spinner=False)
 def generate_chsh_run(a_deg, ap_deg, b_deg, bp_deg, visibility, n_pairs, seed=7):
@@ -730,11 +732,7 @@ with col_ctrl:
     st.slider(T["b_angle"], -180.0, 180.0, key="p2_b")
     st.slider(T["bp_angle"], -180.0, 180.0, key="p2_bp")
     if st.button(T["set_maximal"], key="set_max_p2"):
-        st.session_state["p2_a"] = 0.0
-        st.session_state["p2_ap"] = 90.0
-        st.session_state["p2_b"] = 45.0
-        st.session_state["p2_bp"] = -45.0
-        st.rerun()
+        queue_state_update({"p2_a": 0.0, "p2_ap": 90.0, "p2_b": 45.0, "p2_bp": -45.0})
     if st.button(T["reset_panel"], key="reset_p2"):
         reset_keys({"p2_a": 0.0, "p2_ap": 90.0, "p2_b": 45.0, "p2_bp": -45.0})
 
