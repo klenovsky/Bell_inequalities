@@ -7,6 +7,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
+import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -583,18 +584,19 @@ def build_chsh_frames(run_data, labels, visibility, n_frames=80):
     return idx, frames
 
 def render_plotly_animation(run_data, labels, visibility, speed_ms):
-    N = len(run_data["quantum"]["S"])
     frame_idx, frames = build_chsh_frames(run_data, labels, visibility)
     fig = make_running_chsh_figure(run_data, frame_idx[0], labels, visibility)
     fig.frames = frames
     fig.update_layout(
+        height=520,
         updatemenus=[{
             "type": "buttons",
             "buttons": [
                 {"label": "Play", "method": "animate",
                  "args": [None, {"frame": {"duration": int(speed_ms), "redraw": True},
                                  "transition": {"duration": 0},
-                                 "fromcurrent": True}]},
+                                 "fromcurrent": True,
+                                 "mode": "immediate"}]},
                 {"label": "Pause", "method": "animate",
                  "args": [[None], {"frame": {"duration": 0, "redraw": False},
                                    "mode": "immediate",
@@ -602,11 +604,12 @@ def render_plotly_animation(run_data, labels, visibility, speed_ms):
             ],
             "direction": "left",
             "x": 0.01,
-            "y": 1.15,
+            "y": 1.18,
             "showactive": False,
-        }]
+        }],
     )
-    st.plotly_chart(fig, use_container_width=True)
+    html = fig.to_html(include_plotlyjs="cdn", full_html=False, config={"responsive": True, "displaylogo": False})
+    components.html(html, height=560, scrolling=False)
 
 def gif_running_chsh(run_data, labels, visibility, frame_ms=120, max_frames=80):
     N = len(run_data["quantum"]["S"])
