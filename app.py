@@ -556,11 +556,34 @@ def generate_chsh_run(a_deg, ap_deg, b_deg, bp_deg, visibility, n_pairs, seed=7)
 def make_running_chsh_figure(run_data, frame_idx, labels, visibility):
     x = np.arange(1, frame_idx + 2)
     fig = make_subplots(rows=1, cols=2, subplot_titles=("Running CHSH", "Running correlators"))
+
+    # Fixed colors keep the browser animation as readable as the GIF export.
+    color_quantum = "#1f77b4"
+    color_lhv = "#7f7f7f"
+    corr_colors = {
+        "E00": "#1f77b4",  # blue
+        "E01": "#ff7f0e",  # orange
+        "E10": "#2ca02c",  # green
+        "E11": "#d62728",  # red
+    }
+
     # Left: running S
     S_q = run_data["quantum"]["S"][: frame_idx + 1]
     S_l = run_data["lhv"]["S"][: frame_idx + 1]
-    fig.add_trace(go.Scatter(x=x, y=S_q, mode="lines", name=labels["quantum"], line=dict(width=3)), row=1, col=1)
-    fig.add_trace(go.Scatter(x=x, y=S_l, mode="lines", name=labels["lhv"], line=dict(width=2, dash="dot")), row=1, col=1)
+    fig.add_trace(
+        go.Scatter(
+            x=x, y=S_q, mode="lines", name=labels["quantum"],
+            line=dict(width=3, color=color_quantum)
+        ),
+        row=1, col=1
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x, y=S_l, mode="lines", name=labels["lhv"],
+            line=dict(width=2, dash="dot", color=color_lhv)
+        ),
+        row=1, col=1
+    )
     fig.add_hline(y=2.0, line_dash="dash", line_color="gray", row=1, col=1, annotation_text=labels["classical_bound"])
     fig.add_hline(y=2*np.sqrt(2)*visibility, line_dash="dashdot", line_color="gray", row=1, col=1, annotation_text=labels["tsirelson"])
     fig.update_xaxes(title_text="Pairs", row=1, col=1)
@@ -568,7 +591,17 @@ def make_running_chsh_figure(run_data, frame_idx, labels, visibility):
 
     names = ["E(a,b)", "E(a,b')", "E(a',b)", "E(a',b')"]
     for name, key in zip(names, ["E00", "E01", "E10", "E11"]):
-        fig.add_trace(go.Scatter(x=x, y=run_data["quantum"][key][: frame_idx + 1], mode="lines", name=f"{labels['quantum']} {name}"), row=1, col=2)
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=run_data["quantum"][key][: frame_idx + 1],
+                mode="lines",
+                name=f"{labels['quantum']} {name}",
+                line=dict(width=2.4, color=corr_colors[key]),
+            ),
+            row=1,
+            col=2,
+        )
     fig.update_xaxes(title_text="Pairs", row=1, col=2)
     fig.update_yaxes(title_text="E", row=1, col=2, range=[-1.05, 1.05])
     fig.update_layout(height=480, margin=dict(l=20, r=20, t=50, b=20), legend=dict(orientation="h", y=-0.15))
@@ -615,12 +648,13 @@ def gif_running_chsh(run_data, labels, visibility, frame_ms=120, max_frames=80):
     N = len(run_data["quantum"]["S"])
     idx = np.linspace(0, N - 1, min(max_frames, N), dtype=int)
     images = []
+    corr_colors = {"E00": "#1f77b4", "E01": "#ff7f0e", "E10": "#2ca02c", "E11": "#d62728"}
     for k in idx:
         fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2), dpi=140)
         x = np.arange(1, k + 2)
 
-        axes[0].plot(x, run_data["quantum"]["S"][:k+1], lw=2.5, label=labels["quantum"])
-        axes[0].plot(x, run_data["lhv"]["S"][:k+1], lw=1.8, ls="--", label=labels["lhv"])
+        axes[0].plot(x, run_data["quantum"]["S"][:k+1], lw=2.5, label=labels["quantum"], color="#1f77b4")
+        axes[0].plot(x, run_data["lhv"]["S"][:k+1], lw=1.8, ls="--", label=labels["lhv"], color="#7f7f7f")
         axes[0].axhline(2.0, color="gray", ls=":")
         axes[0].axhline(2*np.sqrt(2)*visibility, color="gray", ls="-.")
         axes[0].set_title("Running CHSH")
@@ -630,7 +664,7 @@ def gif_running_chsh(run_data, labels, visibility, frame_ms=120, max_frames=80):
         axes[0].legend(loc="lower right", fontsize=8)
 
         for name, key in zip(["E(a,b)", "E(a,b')", "E(a',b)", "E(a',b')"], ["E00", "E01", "E10", "E11"]):
-            axes[1].plot(x, run_data["quantum"][key][:k+1], lw=1.7, label=name)
+            axes[1].plot(x, run_data["quantum"][key][:k+1], lw=1.7, label=name, color=corr_colors[key])
         axes[1].set_title("Running correlators")
         axes[1].set_xlabel("Pairs")
         axes[1].set_ylabel("E")
