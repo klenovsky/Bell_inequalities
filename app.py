@@ -555,7 +555,7 @@ def generate_chsh_run(a_deg, ap_deg, b_deg, bp_deg, visibility, n_pairs, seed=7)
 
 def make_running_chsh_figure(run_data, frame_idx, labels, visibility):
     x = np.arange(1, frame_idx + 2)
-    fig = make_subplots(rows=1, cols=2, subplot_titles=("Running CHSH", "Running correlators"))
+    fig = make_subplots(rows=1, cols=2, subplot_titles=("Running |S|", "Running correlators"))
 
     # Fixed colors keep the browser animation as readable as the GIF export.
     color_quantum = "#1f77b4"
@@ -568,8 +568,8 @@ def make_running_chsh_figure(run_data, frame_idx, labels, visibility):
     }
 
     # Left: running S
-    S_q = run_data["quantum"]["S"][: frame_idx + 1]
-    S_l = run_data["lhv"]["S"][: frame_idx + 1]
+    S_q = np.abs(run_data["quantum"]["S"][: frame_idx + 1])
+    S_l = np.abs(run_data["lhv"]["S"][: frame_idx + 1])
     fig.add_trace(
         go.Scatter(
             x=x, y=S_q, mode="lines", name=labels["quantum"],
@@ -587,7 +587,7 @@ def make_running_chsh_figure(run_data, frame_idx, labels, visibility):
     fig.add_hline(y=2.0, line_dash="dash", line_color="gray", row=1, col=1, annotation_text=labels["classical_bound"])
     fig.add_hline(y=2*np.sqrt(2)*visibility, line_dash="dashdot", line_color="gray", row=1, col=1, annotation_text=labels["tsirelson"])
     fig.update_xaxes(title_text="Pairs", row=1, col=1)
-    fig.update_yaxes(title_text="S", row=1, col=1, range=[-3.0, 3.0])
+    fig.update_yaxes(title_text="|S|", row=1, col=1, range=[0.0, 3.0])
 
     names = ["E(a,b)", "E(a,b')", "E(a',b)", "E(a',b')"]
     for name, key in zip(names, ["E00", "E01", "E10", "E11"]):
@@ -653,14 +653,14 @@ def gif_running_chsh(run_data, labels, visibility, frame_ms=120, max_frames=80):
         fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2), dpi=140)
         x = np.arange(1, k + 2)
 
-        axes[0].plot(x, run_data["quantum"]["S"][:k+1], lw=2.5, label=labels["quantum"], color="#1f77b4")
-        axes[0].plot(x, run_data["lhv"]["S"][:k+1], lw=1.8, ls="--", label=labels["lhv"], color="#7f7f7f")
+        axes[0].plot(x, np.abs(run_data["quantum"]["S"][:k+1]), lw=2.5, label=labels["quantum"], color="#1f77b4")
+        axes[0].plot(x, np.abs(run_data["lhv"]["S"][:k+1]), lw=1.8, ls="--", label=labels["lhv"], color="#7f7f7f")
         axes[0].axhline(2.0, color="gray", ls=":")
         axes[0].axhline(2*np.sqrt(2)*visibility, color="gray", ls="-.")
-        axes[0].set_title("Running CHSH")
+        axes[0].set_title("Running |S|")
         axes[0].set_xlabel("Pairs")
-        axes[0].set_ylabel("S")
-        axes[0].set_ylim(-3.0, 3.0)
+        axes[0].set_ylabel("|S|")
+        axes[0].set_ylim(0.0, 3.0)
         axes[0].legend(loc="lower right", fontsize=8)
 
         for name, key in zip(["E(a,b)", "E(a,b')", "E(a',b)", "E(a',b')"], ["E00", "E01", "E10", "E11"]):
